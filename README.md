@@ -355,24 +355,35 @@ CREATE TABLE audit_logs (
 ### Authentication
 ```
 POST   /api/v1/auth/login              - Login
+POST   /api/v1/auth/login-2fa          - Login with 2FA
 POST   /api/v1/auth/logout             - Logout
-POST   /api/v1/auth/refresh         - Refresh token
-POST   /api/v1/auth/login-2fa        - Login with 2FA
-GET    /api/v1/2fa/status           - Get 2FA status
-GET    /api/v1/2fa/setup            - Setup 2FA (get QR)
-POST   /api/v1/2fa/enable           - Enable 2FA
-POST   /api/v1/2fa/disable          - Disable 2FA
-GET    /api/v1/auth/me             - Current user
+POST   /api/v1/auth/refresh            - Refresh token
+POST   /api/v1/auth/forgot-password    - Request password reset
+POST   /api/v1/auth/reset-password     - Reset password with token
+POST   /api/v1/auth/verify-email       - Verify email token
+GET    /api/v1/auth/me                 - Current user info
+PUT    /api/v1/auth/profile            - Update user profile
+GET    /api/v1/2fa/status              - Get 2FA status
+GET    /api/v1/2fa/setup               - Setup 2FA (get QR code)
+POST   /api/v1/2fa/enable              - Enable 2FA
+POST   /api/v1/2fa/disable             - Disable 2FA
+POST   /api/v1/2fa/verify              - Verify 2FA code
 ```
 
 ### Students
 ```
-GET    /api/v1/students             - List students
-POST   /api/v1/students            - Create student
-GET    /api/v1/students/:id        - Get student
-PUT    /api/v1/students/:id       - Update student
-GET    /api/v1/students/:id/attendance - Student attendance
-GET    /api/v1/students/:id/fees   - Student fees
+GET    /api/v1/students                - List students (filtered by tenant)
+POST   /api/v1/students                - Create student (Admin only)
+GET    /api/v1/students/:id            - Get student details
+PUT    /api/v1/students/:id            - Update student (Admin only)
+DELETE /api/v1/students/:id            - Soft delete student (Super Admin)
+GET    /api/v1/students/:id/profile    - Get extended profile
+GET    /api/v1/students/:id/family     - Get family/parent info
+POST   /api/v1/students/:id/family     - Add family member
+GET    /api/v1/students/:id/attendance - Student attendance history
+GET    /api/v1/students/:id/grades     - Student grade records
+GET    /api/v1/students/:id/fees       - Student fee status
+GET    /api/v1/students/:id/reports    - Student performance reports
 ```
 
 ### Academic
@@ -446,7 +457,15 @@ docker-compose up -d
 # Web: http://localhost:3000
 ```
 
-### Option 2: Local Development
+### Option 2: Cloud Deployment (Coolify)
+Edusys Pro is optimized for deployment via **Coolify**.
+
+1. Connect your GitHub/GitLab repository to Coolify.
+2. Select **Dockerfile** as the build pack.
+3. Configure Environment Variables in the Coolify dashboard (see [.env.example](.env.example)).
+4. Coolify will automatically build and deploy your container on every push to `main`.
+
+### Option 3: Local Development
 
 #### Backend Setup
 
