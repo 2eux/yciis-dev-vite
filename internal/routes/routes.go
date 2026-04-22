@@ -2,14 +2,15 @@ package routes
 
 import (
 	"github.com/edusyspro/edusys/internal/config"
+	"github.com/edusyspro/edusys/internal/handlers"
 	"github.com/edusyspro/edusys/internal/middleware"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func RegisterAuthRoutes(api fiber.Router, db *pgxpool.Pool, cfg *config.Config) {
-	handler := NewAuthHandler(db, cfg)
-	twoFAHandler := NewTwoFAHandler(db, cfg)
+	handler := handlers.NewAuthHandler(db, cfg)
+	twoFAHandler := handlers.NewTwoFAHandler(db, cfg)
 	auth := api.Group("/auth")
 	auth.Post("/login", handler.Login)
 	auth.Post("/login-2fa", twoFAHandler.LoginWith2FA)
@@ -30,7 +31,7 @@ func RegisterAuthRoutes(api fiber.Router, db *pgxpool.Pool, cfg *config.Config) 
 }
 
 func RegisterStudentRoutes(api fiber.Router, db *pgxpool.Pool, cfg *config.Config) {
-	handler := NewStudentHandler(db, cfg)
+	handler := handlers.NewStudentHandler(db, cfg)
 	students := api.Group("/students", middleware.NewAuthMiddleware(cfg).Authenticate)
 
 	students.Get("", handler.List)
@@ -48,7 +49,7 @@ func RegisterStudentRoutes(api fiber.Router, db *pgxpool.Pool, cfg *config.Confi
 }
 
 func RegisterAcademicRoutes(api fiber.Router, db *pgxpool.Pool, cfg *config.Config) {
-	handler := NewAcademicHandler(db, cfg)
+	handler := handlers.NewAcademicHandler(db, cfg)
 	academic := api.Group("/academic", middleware.NewAuthMiddleware(cfg).Authenticate)
 
 	academic.Get("/years", handler.ListAcademicYears)
@@ -72,7 +73,7 @@ func RegisterAcademicRoutes(api fiber.Router, db *pgxpool.Pool, cfg *config.Conf
 }
 
 func RegisterAttendanceRoutes(api fiber.Router, db *pgxpool.Pool, cfg *config.Config) {
-	handler := NewAttendanceHandler(db, cfg)
+	handler := handlers.NewAttendanceHandler(db, cfg)
 	attendance := api.Group("/attendance", middleware.NewAuthMiddleware(cfg).Authenticate)
 
 	attendance.Get("/students", handler.ListStudentAttendance)
@@ -85,7 +86,7 @@ func RegisterAttendanceRoutes(api fiber.Router, db *pgxpool.Pool, cfg *config.Co
 }
 
 func RegisterExamRoutes(api fiber.Router, db *pgxpool.Pool, cfg *config.Config) {
-	handler := NewExamHandler(db, cfg)
+	handler := handlers.NewExamHandler(db, cfg)
 	exams := api.Group("/exams", middleware.NewAuthMiddleware(cfg).Authenticate)
 
 	exams.Get("", handler.List)
@@ -102,7 +103,7 @@ func RegisterExamRoutes(api fiber.Router, db *pgxpool.Pool, cfg *config.Config) 
 }
 
 func RegisterFeeRoutes(api fiber.Router, db *pgxpool.Pool, cfg *config.Config) {
-	handler := NewFeeHandler(db, cfg)
+	handler := handlers.NewFeeHandler(db, cfg)
 	fees := api.Group("/fees", middleware.NewAuthMiddleware(cfg).Authenticate)
 
 	fees.Get("/structures", handler.ListFeeStructures)
@@ -118,7 +119,7 @@ func RegisterFeeRoutes(api fiber.Router, db *pgxpool.Pool, cfg *config.Config) {
 }
 
 func RegisterHRRoutes(api fiber.Router, db *pgxpool.Pool, cfg *config.Config) {
-	handler := NewHRHandler(db, cfg)
+	handler := handlers.NewHRHandler(db, cfg)
 	hr := api.Group("/hr", middleware.NewAuthMiddleware(cfg).Authenticate)
 
 	hr.Get("/staff", handler.ListStaff)
@@ -138,7 +139,7 @@ func RegisterHRRoutes(api fiber.Router, db *pgxpool.Pool, cfg *config.Config) {
 }
 
 func RegisterLMSRoutes(api fiber.Router, db *pgxpool.Pool, cfg *config.Config) {
-	handler := NewLMSHandler(db, cfg)
+	handler := handlers.NewLMSHandler(db, cfg)
 	lms := api.Group("/lms", middleware.NewAuthMiddleware(cfg).Authenticate)
 
 	lms.Get("/courses", handler.ListCourses)
@@ -156,7 +157,7 @@ func RegisterLMSRoutes(api fiber.Router, db *pgxpool.Pool, cfg *config.Config) {
 }
 
 func RegisterLibraryRoutes(api fiber.Router, db *pgxpool.Pool, cfg *config.Config) {
-	handler := NewLibraryHandler(db, cfg)
+	handler := handlers.NewLibraryHandler(db, cfg)
 	library := api.Group("/library", middleware.NewAuthMiddleware(cfg).Authenticate)
 
 	library.Get("/books", handler.ListBooks)
@@ -170,7 +171,7 @@ func RegisterLibraryRoutes(api fiber.Router, db *pgxpool.Pool, cfg *config.Confi
 }
 
 func RegisterTransportRoutes(api fiber.Router, db *pgxpool.Pool, cfg *config.Config) {
-	handler := NewTransportHandler(db, cfg)
+	handler := handlers.NewTransportHandler(db, cfg)
 	transport := api.Group("/transport", middleware.NewAuthMiddleware(cfg).Authenticate)
 
 	transport.Get("/routes", handler.ListRoutes)
@@ -185,7 +186,7 @@ func RegisterTransportRoutes(api fiber.Router, db *pgxpool.Pool, cfg *config.Con
 }
 
 func RegisterAnalyticsRoutes(api fiber.Router, db *pgxpool.Pool, cfg *config.Config) {
-	handler := NewAnalyticsHandler(db, cfg)
+	handler := handlers.NewAnalyticsHandler(db, cfg)
 	analytics := api.Group("/analytics", middleware.NewAuthMiddleware(cfg).Authenticate)
 
 	analytics.Get("/dashboard", handler.Dashboard)
@@ -201,7 +202,7 @@ func RegisterAnalyticsRoutes(api fiber.Router, db *pgxpool.Pool, cfg *config.Con
 }
 
 func RegisterAdmissionRoutes(api fiber.Router, db *pgxpool.Pool, cfg *config.Config) {
-	handler := NewAdmissionHandler(db, cfg)
+	handler := handlers.NewAdmissionHandler(db, cfg)
 	admission := api.Group("/admission", middleware.NewAuthMiddleware(cfg).Authenticate)
 
 	admission.Get("/leads", handler.ListLeads)
@@ -215,7 +216,7 @@ func RegisterAdmissionRoutes(api fiber.Router, db *pgxpool.Pool, cfg *config.Con
 }
 
 func RegisterMessageRoutes(api fiber.Router, db *pgxpool.Pool, cfg *config.Config) {
-	handler := NewMessageHandler(db, cfg)
+	handler := handlers.NewMessageHandler(db, cfg)
 	messages := api.Group("/messages", middleware.NewAuthMiddleware(cfg).Authenticate)
 
 	messages.Get("", handler.List)
@@ -236,7 +237,7 @@ func RegisterMessageRoutes(api fiber.Router, db *pgxpool.Pool, cfg *config.Confi
 }
 
 func RegisterTenantRoutes(api fiber.Router, db *pgxpool.Pool, cfg *config.Config) {
-	handler := NewTenantHandler(db, cfg)
+	handler := handlers.NewTenantHandler(db, cfg)
 	tenants := api.Group("/tenants", middleware.NewAuthMiddleware(cfg).Authenticate)
 	
 	tenants.Get("", middleware.NewAuthMiddleware(cfg).RequireRole("super_admin"), handler.List)
