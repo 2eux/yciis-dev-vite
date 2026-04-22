@@ -4,10 +4,11 @@ WORKDIR /app
 
 RUN apk add --no-cache git make
 
-COPY go.mod go.sum ./
-RUN go mod download
+COPY go.mod go.sum* ./
+RUN go mod download || true
 
 COPY . .
+RUN go mod tidy
 
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /server ./cmd/server
 
@@ -21,7 +22,6 @@ RUN addgroup -S edusys && adduser -S edusys -G edusys
 WORKDIR /app
 
 COPY --from=builder /server .
-COPY --from=builder /app/migrations ./migrations
 COPY --from=builder /app/web/public ./web/public
 
 # Do NOT copy .env.example as .env — secrets must be injected via env vars at runtime
