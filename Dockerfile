@@ -9,19 +9,30 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /server ./cmd/server
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /server ./cmd/server
 
 FROM alpine:3.19
 
 RUN apk add --no-cache ca-certificates tzdata
+
+# Run as non-root user for security
+RUN addgroup -S edusys && adduser -S edusys -G edusys
 
 WORKDIR /app
 
 COPY --from=builder /server .
 COPY --from=builder /app/migrations ./migrations
 COPY --from=builder /app/web/public ./web/public
-COPY --from=builder /app/.env.example ./.env
+
+# Do NOT copy .env.example as .env — secrets must be injected via env vars at runtime
+
+RUN chown -R edusys:edusys /app
+
+USER edusys
 
 EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget -qO- http://localhost:8080/ || exit 1
 
 CMD ["./server"]

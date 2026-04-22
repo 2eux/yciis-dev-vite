@@ -10,6 +10,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+// Connect establishes a connection pool to PostgreSQL with tuned pool settings.
 func Connect(cfg *config.Config) (*pgxpool.Pool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
@@ -19,6 +20,7 @@ func Connect(cfg *config.Config) (*pgxpool.Pool, error) {
 		return nil, fmt.Errorf("failed to parse database URL: %w", err)
 	}
 
+	// Connection pool tuning
 	poolConfig.MaxConns = 25
 	poolConfig.MinConns = 5
 	poolConfig.MaxConnLifetime = time.Hour
@@ -36,15 +38,19 @@ func Connect(cfg *config.Config) (*pgxpool.Pool, error) {
 	return pool, nil
 }
 
+// ConnectRedis creates a Redis client using the parsed host/password from config.
 func ConnectRedis(cfg *config.Config) *redis.Client {
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     cfg.RedisURL,
-		Password: "",
-		DB:       0,
+		Addr:     cfg.RedisHost,
+		Password: cfg.RedisPassword,
+		DB:       cfg.RedisDB,
 	})
 	return rdb
 }
 
+// RunMigrations executes database migrations.
+// TODO: Replace with a proper migration tool (golang-migrate or goose)
+// for versioned, reversible migrations.
 func RunMigrations(db *pgxpool.Pool) error {
 	migrations := []string{
 		`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`,

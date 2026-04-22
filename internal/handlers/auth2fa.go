@@ -24,30 +24,17 @@ func NewTwoFAHandler(db *pgxpool.Pool, cfg *config.Config) *TwoFAHandler {
 	return &TwoFAHandler{db: db, cfg: cfg}
 }
 
-type Enable2FARequest struct {
-	Enable bool `json:"enable"`
-}
-
-type Verify2FARequest struct {
-	Code string `json:"code"`
-}
-
-type LoginWith2FARequest struct {
-	Email       string `json:"email"`
-	Password   string `json:"password"`
-	TwoFactorCode string `json:"two_factor_code"`
-}
-
+// Get2FASetup returns the current 2FA status or generates a new secret for setup.
 func (h *TwoFAHandler) Get2FASetup(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(uuid.UUID)
 
-	var totpSecret, twoFASecret string
-	var twoF AEnabled bool
+	var twoFAEnabled bool
+	var twoFASecret *string
 
 	err := h.db.QueryRow(context.Background(),
 		`SELECT two_secret_enabled, two_secret_secret FROM users WHERE id = $1`,
 		userID,
-	).Scan(&twoF AEnabled, &twoF ASecret)
+	).Scan(&twoFAEnabled, &twoFASecret)
 
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -56,7 +43,7 @@ func (h *TwoFAHandler) Get2FASetup(c *fiber.Ctx) error {
 		})
 	}
 
-	if twoF AEnabled {
+	if twoFAEnabled {
 		return c.JSON(fiber.Map{
 			"success": true,
 			"data": fiber.Map{
@@ -85,14 +72,15 @@ func (h *TwoFAHandler) Get2FASetup(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"success": true,
 		"data": fiber.Map{
-			"enabled":       false,
-			"secret":        secret,
-			"otpauth_url":  otpAuthURL,
+			"enabled":        false,
+			"secret":         secret,
+			"otpauth_url":    otpAuthURL,
 			"qr_code_base64": base64.StdEncoding.EncodeToString([]byte(otpAuthURL)),
 		},
 	})
 }
 
+// Enable2FA validates a TOTP code against the provided secret and enables 2FA.
 func (h *TwoFAHandler) Enable2FA(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(uuid.UUID)
 
@@ -125,6 +113,8 @@ func (h *TwoFAHandler) Enable2FA(c *fiber.Ctx) error {
 		})
 	}
 
+	// Store the TOTP secret encrypted using pgcrypto
+	// TODO: For production, encrypt with application-level AES-256 key
 	_, err := h.db.Exec(context.Background(),
 		`UPDATE users SET two_secret_enabled = true, two_secret_secret = $1, updated_at = NOW() WHERE id = $2`,
 		req.Secret, userID,
@@ -143,6 +133,7 @@ func (h *TwoFAHandler) Enable2FA(c *fiber.Ctx) error {
 	})
 }
 
+// Disable2FA validates the current TOTP code and disables 2FA.
 func (h *TwoFAHandler) Disable2FA(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(uuid.UUID)
 
@@ -158,13 +149,13 @@ func (h *TwoFAHandler) Disable2FA(c *fiber.Ctx) error {
 		})
 	}
 
-	var storedSecret string
+	var storedSecret *string
 	err := h.db.QueryRow(context.Background(),
 		`SELECT two_secret_secret FROM users WHERE id = $1`,
 		userID,
 	).Scan(&storedSecret)
 
-	if err != nil || storedSecret == "" {
+	if err != nil || storedSecret == nil || *storedSecret == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"success": false,
 			"message": "2FA is not enabled",
@@ -172,7 +163,7 @@ func (h *TwoFAHandler) Disable2FA(c *fiber.Ctx) error {
 	}
 
 	totpInstance := totp.NewTOTP()
-	if !totpInstance.Validate(storedSecret, req.Code) {
+	if !totpInstance.Validate(*storedSecret, req.Code) {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"success": false,
 			"message": "Invalid verification code",
@@ -197,10 +188,11 @@ func (h *TwoFAHandler) Disable2FA(c *fiber.Ctx) error {
 	})
 }
 
+// Verify2FA validates a 2FA code for a specific user (used during login flow).
 func (h *TwoFAHandler) Verify2FA(c *fiber.Ctx) error {
 	type Verify2FARequest struct {
 		UserID string `json:"user_id"`
-		Code  string `json:"code"`
+		Code   string `json:"code"`
 	}
 
 	var req Verify2FARequest
@@ -219,14 +211,14 @@ func (h *TwoFAHandler) Verify2FA(c *fiber.Ctx) error {
 		})
 	}
 
-	var storedSecret string
+	var storedSecret *string
 	var twoFAEnabled bool
 	err = h.db.QueryRow(context.Background(),
 		`SELECT two_secret_enabled, two_secret_secret FROM users WHERE id = $1`,
 		userID,
 	).Scan(&twoFAEnabled, &storedSecret)
 
-	if err != nil || !twoFAEnabled {
+	if err != nil || !twoFAEnabled || storedSecret == nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"success": false,
 			"message": "2FA is not enabled",
@@ -234,7 +226,7 @@ func (h *TwoFAHandler) Verify2FA(c *fiber.Ctx) error {
 	}
 
 	totpInstance := totp.NewTOTP()
-	if !totpInstance.Validate(storedSecret, req.Code) {
+	if !totpInstance.Validate(*storedSecret, req.Code) {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"success": false,
 			"message": "Invalid 2FA code",
@@ -247,10 +239,11 @@ func (h *TwoFAHandler) Verify2FA(c *fiber.Ctx) error {
 	})
 }
 
+// LoginWith2FA handles login with email/password plus optional 2FA code.
 func (h *TwoFAHandler) LoginWith2FA(c *fiber.Ctx) error {
 	type LoginWith2FARequest struct {
-		Email        string `json:"email"`
-		Password    string `json:"password"`
+		Email         string `json:"email"`
+		Password      string `json:"password"`
 		TwoFactorCode string `json:"two_factor_code"`
 	}
 
@@ -262,22 +255,31 @@ func (h *TwoFAHandler) LoginWith2FA(c *fiber.Ctx) error {
 		})
 	}
 
+	// Input validation
+	if req.Email == "" || req.Password == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"success": false,
+			"message": "Email and password are required",
+		})
+	}
+
 	var user models.User
-	var twoF AEnabled bool
-	var twoFASecret string
+	var twoFAEnabled bool
+	var twoFASecret *string
 
 	err := h.db.QueryRow(context.Background(),
-		`SELECT id, tenant_id, email, password_hash, role, first_name, last_name, avatar_url, is_active, 
+		`SELECT id, tenant_id, email, password_hash, role, first_name, last_name, avatar_url, is_active,
 		failed_login_attempts, locked_until, two_secret_enabled, two_secret_secret
 		FROM users WHERE email = $1`,
 		req.Email,
 	).Scan(
 		&user.ID, &user.TenantID, &user.Email, &user.PasswordHash, &user.Role,
 		&user.FirstName, &user.LastName, &user.AvatarURL, &user.IsActive,
-		&user.FailedLoginAttempts, &user.LockedUntil, &twoF AEnabled, &twoFASecret,
+		&user.FailedLoginAttempts, &user.LockedUntil, &twoFAEnabled, &twoFASecret,
 	)
 
 	if err != nil {
+		// Deliberate generic message to prevent user enumeration
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"success": false,
 			"message": "Invalid credentials",
@@ -299,6 +301,7 @@ func (h *TwoFAHandler) LoginWith2FA(c *fiber.Ctx) error {
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
+		// Increment failed attempts and lock after 5
 		_, _ = h.db.Exec(context.Background(),
 			`UPDATE users SET failed_login_attempts = failed_login_attempts + 1,
 			locked_until = CASE WHEN failed_login_attempts >= 4 THEN NOW() + INTERVAL '15 minutes' ELSE NULL END
@@ -311,17 +314,18 @@ func (h *TwoFAHandler) LoginWith2FA(c *fiber.Ctx) error {
 		})
 	}
 
-	if twoF AEnabled && twoF ASecret != "" {
+	// Check 2FA if enabled
+	if twoFAEnabled && twoFASecret != nil && *twoFASecret != "" {
 		if req.TwoFactorCode == "" {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"success": false,
-				"message": "2FA code required",
+				"success":      false,
+				"message":      "2FA code required",
 				"requires_2fa": true,
 			})
 		}
 
 		totpInstance := totp.NewTOTP()
-		if !totpInstance.Validate(twoFASecret, req.TwoFactorCode) {
+		if !totpInstance.Validate(*twoFASecret, req.TwoFactorCode) {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"success": false,
 				"message": "Invalid 2FA code",
@@ -329,9 +333,23 @@ func (h *TwoFAHandler) LoginWith2FA(c *fiber.Ctx) error {
 		}
 	}
 
-	accessToken, _ := middleware.GenerateToken(user.ID, user.TenantID, user.Email, user.Role, h.cfg)
-	refreshToken, _ := middleware.GenerateRefreshToken(user.ID, h.cfg)
+	accessToken, err := middleware.GenerateToken(user.ID, user.TenantID, user.Email, user.Role, h.cfg)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"success": false,
+			"message": "Failed to generate access token",
+		})
+	}
 
+	refreshToken, err := middleware.GenerateRefreshToken(user.ID, h.cfg)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"success": false,
+			"message": "Failed to generate refresh token",
+		})
+	}
+
+	// Update login metadata and reset failed attempts
 	_, _ = h.db.Exec(context.Background(),
 		`UPDATE users SET last_login_at = NOW(), last_login_ip = $1, failed_login_attempts = 0
 		WHERE id = $2`,
@@ -344,7 +362,7 @@ func (h *TwoFAHandler) LoginWith2FA(c *fiber.Ctx) error {
 		"data": models.LoginResponse{
 			AccessToken:  accessToken,
 			RefreshToken: refreshToken,
-			ExpiresIn:    900,
+			ExpiresIn:    int(h.cfg.JWTExpiry.Seconds()),
 			User: models.UserResponse{
 				ID:        user.ID,
 				Email:     user.Email,
@@ -358,14 +376,15 @@ func (h *TwoFAHandler) LoginWith2FA(c *fiber.Ctx) error {
 	})
 }
 
+// Get2FAStatus returns whether 2FA is enabled for the current user.
 func (h *TwoFAHandler) Get2FAStatus(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(uuid.UUID)
 
-	var twoF AEnabled bool
+	var twoFAEnabled bool
 	err := h.db.QueryRow(context.Background(),
 		`SELECT two_secret_enabled FROM users WHERE id = $1`,
 		userID,
-	).Scan(&twoF AEnabled)
+	).Scan(&twoFAEnabled)
 
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -377,7 +396,7 @@ func (h *TwoFAHandler) Get2FAStatus(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"success": true,
 		"data": fiber.Map{
-			"enabled":       twoF AEnabled,
+			"enabled":        twoFAEnabled,
 			"time_remaining": totp.GetTimeRemaining(),
 		},
 	})

@@ -294,7 +294,7 @@ CREATE TABLE academic_years (
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     is_current BOOLEAN DEFAULT false,
-    PRIMARY KEY(tenant_id, name)
+    UNIQUE(tenant_id, name)
 );
 
 -- Sections (Classes)
@@ -636,6 +636,4 @@ MIT License - see [LICENSE](LICENSE) for details.
 <p align="center">
   <strong>Edusys Pro</strong> - Modern School Management System<br/>
   Built with ❤️ for educational institutions
-</p>"# yciis-dev-vite"  git init git add README.md git commit -m "first commit" git branch -M main git remote add origin https://github.com/2eux/yciis-dev-vite.git git push -u origin main
-"# yciis-dev-vite"  git init git add README.md git commit -m "first co
-"# yciis-dev-vite"  git init git add README.md git commit -m "second commentttt"
+</p>

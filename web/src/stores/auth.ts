@@ -30,6 +30,19 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'edusys-auth',
+      storage: {
+        getItem: (name) => {
+          const str = sessionStorage.getItem(name)
+          if (!str) return null
+          return JSON.parse(str)
+        },
+        setItem: (name, value) => {
+          sessionStorage.setItem(name, JSON.stringify(value))
+        },
+        removeItem: (name) => {
+          sessionStorage.removeItem(name)
+        },
+      },
     }
   )
 )

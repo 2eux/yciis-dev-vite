@@ -45,6 +45,14 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 		})
 	}
 
+	// Input validation
+	if req.Email == "" || req.Password == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"success": false,
+			"message": "Email and password are required",
+		})
+	}
+
 	var user models.User
 	err := h.db.QueryRow(context.Background(),
 		`SELECT id, tenant_id, email, password_hash, role, first_name, last_name, avatar_url, is_active, failed_login_attempts, locked_until
@@ -90,8 +98,20 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 		})
 	}
 
-	accessToken, _ := middleware.GenerateToken(user.ID, user.TenantID, user.Email, user.Role, h.cfg)
-	refreshToken, _ := middleware.GenerateRefreshToken(user.ID, h.cfg)
+	accessToken, err := middleware.GenerateToken(user.ID, user.TenantID, user.Email, user.Role, h.cfg)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"success": false,
+			"message": "Failed to generate access token",
+		})
+	}
+	refreshToken, err := middleware.GenerateRefreshToken(user.ID, h.cfg)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"success": false,
+			"message": "Failed to generate refresh token",
+		})
+	}
 
 	_, _ = h.db.Exec(context.Background(),
 		`UPDATE users SET last_login_at = NOW(), last_login_ip = $1, failed_login_attempts = 0
@@ -105,7 +125,7 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 		"data": models.LoginResponse{
 			AccessToken:  accessToken,
 			RefreshToken: refreshToken,
-			ExpiresIn:    900,
+			ExpiresIn:    int(h.cfg.JWTExpiry.Seconds()),
 			User: models.UserResponse{
 				ID:        user.ID,
 				Email:     user.Email,
@@ -120,9 +140,12 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 }
 
 func (h *AuthHandler) Logout(c *fiber.Ctx) error {
+	// TODO: When refresh token storage is implemented,
+	// invalidate the user's refresh token here.
+	// For now, the client should discard the tokens.
 	return c.JSON(fiber.Map{
 		"success": true,
-		"message": "Logged out successfully",
+		"message": "Logged out successfully. Please discard your tokens.",
 	})
 }
 
@@ -186,6 +209,20 @@ func (h *AuthHandler) ForgotPassword(c *fiber.Ctx) error {
 		})
 	}
 
+	if req.Email == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"success": false,
+			"message": "Email is required",
+		})
+	}
+
+	token := uuid.New().String()
+	expiresAt := time.Now().Add(1 * time.Hour)
+
+	// Since we don't have reset_token right now in users schema, we use a simple comment.
+	// TODO: implement emailing the token, and add reset_token and reset_expires_at columns to DB.
+	log.Printf("Password reset token generated for %s: %s (expires: %v)\n", req.Email, token, expiresAt)
+
 	return c.JSON(fiber.Map{
 		"success": true,
 		"message": "If the email exists, a reset link has been sent",
@@ -197,6 +234,33 @@ func (h *AuthHandler) ResetPassword(c *fiber.Ctx) error {
 		Token       string `json:"token"`
 		NewPassword string `json:"new_password"`
 	}
+
+	var req ResetPasswordRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"success": false,
+			"message": "Invalid request body",
+		})
+	}
+
+	if req.Token == "" || req.NewPassword == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"success": false,
+			"message": "Token and new password are required",
+		})
+	}
+
+	// For security, enforce a minimum length
+	if len(req.NewPassword) < 8 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"success": false,
+			"message": "Password must be at least 8 characters",
+		})
+	}
+
+	// TODO: Verify token in the database when reset_token column exists
+	// hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), 12)
+	// UPDATE users SET password_hash = $1 WHERE reset_token = $2 AND reset_expires_at > NOW()
 
 	return c.JSON(fiber.Map{
 		"success": true,
@@ -393,13 +457,15 @@ func (h *StudentHandler) Get(c *fiber.Ctx) error {
 		})
 	}
 
+	tenantID := c.Locals("tenant_id").(uuid.UUID)
+
 	var student models.Student
 	err = h.db.QueryRow(context.Background(),
 		`SELECT id, tenant_id, student_id, gender, date_of_birth, place_of_birth, 
 			nationality, religion, blood_type, address, city, province, postal_code,
 			emergency_contact_name, emergency_contact_phone, emergency_contact_relation, notes
-		FROM students WHERE id = $1`,
-		id,
+		FROM students WHERE id = $1 AND tenant_id = $2`,
+		id, tenantID,
 	).Scan(
 		&student.ID, &student.TenantID, &student.StudentID, &student.Gender, &student.DateOfBirth,
 		&student.PlaceOfBirth, &student.Nationality, &student.Religion, &student.BloodType,
@@ -453,7 +519,13 @@ func (h *StudentHandler) Create(c *fiber.Ctx) error {
 		})
 	}
 
-	hashedPassword, _ := bcrypt.HashFromString(req.Password)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), 12)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"success": false,
+			"message": "Failed to process password",
+		})
+	}
 	userID := uuid.New()
 	studentID := fmt.Sprintf("STU%d%04d", time.Now().Year(), 1)
 
@@ -528,9 +600,11 @@ func (h *StudentHandler) Delete(c *fiber.Ctx) error {
 		})
 	}
 
+	tenantID := c.Locals("tenant_id").(uuid.UUID)
+
 	_, err = h.db.Exec(context.Background(),
-		`UPDATE students SET is_active = false, updated_at = NOW() WHERE id = $1`,
-		id,
+		`UPDATE students SET is_active = false, updated_at = NOW() WHERE id = $1 AND tenant_id = $2`,
+		id, tenantID,
 	)
 
 	if err != nil {

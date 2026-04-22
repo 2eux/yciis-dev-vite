@@ -7,22 +7,31 @@ services:
       dockerfile: Dockerfile
     container_name: edusys-api
     ports:
-      - "8080:8080"
+      - "${SERVER_PORT:-8080}:8080"
+    env_file:
+      - .env
     environment:
       - SERVER_PORT=8080
-      - DATABASE_URL=postgres://edusys:edusys123@db:5432/edusys?sslmode=disable
+      - DATABASE_URL=postgres://${POSTGRES_USER:-edusys}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-edusys}?sslmode=disable
       - REDIS_URL=redis://cache:6379
-      - JWT_SECRET=edusys-super-secret-key-change-in-production-2024
-      - ENVIRONMENT=development
-      - DEBUG=true
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - DEBUG=${DEBUG:-false}
     depends_on:
-      - db
-      - cache
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
     networks:
       - edusys-network
     restart: unless-stopped
     volumes:
       - uploads:/app/uploads
+    # Security: drop unnecessary capabilities
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
 
   web:
     build:
@@ -30,32 +39,36 @@ services:
       dockerfile: Dockerfile
     container_name: edusys-web
     ports:
-      - "3000:3000"
+      - "${WEB_PORT:-3000}:3000"
     environment:
       - API_URL=http://api:8080
-      - NODE_ENV=development
+      - NODE_ENV=${ENVIRONMENT:-development}
     depends_on:
       - api
     networks:
       - edusys-network
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
 
   db:
     image: postgres:15-alpine
     container_name: edusys-db
     environment:
-      - POSTGRES_USER=edusys
-      - POSTGRES_PASSWORD=edusys123
-      - POSTGRES_DB=edusys
-    ports:
-      - "5432:5432"
+      - POSTGRES_USER=${POSTGRES_USER:-edusys}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      - POSTGRES_DB=${POSTGRES_DB:-edusys}
+    # Do NOT expose DB port in production — only accessible within the network
+    # Uncomment for local development only:
+    # ports:
+    #   - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - edusys-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U edusys -d edusys"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-edusys} -d ${POSTGRES_DB:-edusys}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -63,14 +76,16 @@ services:
   cache:
     image: redis:7-alpine
     container_name: edusys-cache
-    ports:
-      - "6379:6379"
+    # Do NOT expose Redis port in production
+    # ports:
+    #   - "6379:6379"
     volumes:
       - redis_data:/data
     networks:
       - edusys-network
     restart: unless-stopped
-    command: redis-server --appendonly yes
+    # Require password for Redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -80,12 +95,13 @@ services:
   minio:
     image: minio/minio
     container_name: edusys-minio
-    ports:
-      - "9000:9000"
-      - "9001:9001"
+    # Do NOT expose MinIO ports in production
+    # ports:
+    #   - "9000:9000"
+    #   - "9001:9001"
     environment:
-      - MINIO_ROOT_USER=edusys
-      - MINIO_ROOT_PASSWORD=edusys123
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-edusys}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
     volumes:
       - s3_data:/data
     command: server /data --console-address ":9001"

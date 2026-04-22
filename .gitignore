@@ -1,0 +1,50 @@
+# ===============================================
+# EDUSYS PRO — .gitignore
+# ===============================================
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Go
+/server
+/worker
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+/tmp
+/vendor
+
+# Frontend (web/)
+web/node_modules/
+web/dist/
+web/.vite/
+web/.cache/
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Coverage & Testing
+coverage/
+*.cover
+*.prof
+
+# Docker (local overrides only)
+docker-compose.override.yml

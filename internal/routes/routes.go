@@ -54,18 +54,18 @@ func RegisterAcademicRoutes(api fiber.Router, db *pgxpool.Pool, cfg *config.Conf
 	academic.Get("/years", handler.ListAcademicYears)
 	academic.Post("/years", middleware.NewAuthMiddleware(cfg).RequireRole("admin", "super_admin"), handler.CreateAcademicYear)
 
-	sections := api.Group("/sections")
+	sections := api.Group("/sections", middleware.NewAuthMiddleware(cfg).Authenticate)
 	sections.Get("", handler.ListSections)
 	sections.Get("/:id", handler.GetSection)
 	sections.Post("", middleware.NewAuthMiddleware(cfg).RequireRole("admin", "super_admin"), handler.CreateSection)
 	sections.Put("/:id/students", middleware.NewAuthMiddleware(cfg).RequireRole("admin", "teacher"), handler.AssignStudents)
 	sections.Get("/:id/timetable", handler.GetTimetable)
 
-	subjects := api.Group("/subjects")
+	subjects := api.Group("/subjects", middleware.NewAuthMiddleware(cfg).Authenticate)
 	subjects.Get("", handler.ListSubjects)
 	subjects.Post("", middleware.NewAuthMiddleware(cfg).RequireRole("admin", "super_admin"), handler.CreateSubject)
 
-	timetable := api.Group("/timetables")
+	timetable := api.Group("/timetables", middleware.NewAuthMiddleware(cfg).Authenticate)
 	timetable.Get("", handler.ListTimetables)
 	timetable.Post("", middleware.NewAuthMiddleware(cfg).RequireRole("admin", "super_admin"), handler.CreateTimetable)
 	timetable.Get("/generate", handler.GenerateTimetable)

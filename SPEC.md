@@ -343,7 +343,6 @@ CREATE TABLE sections (
     grade_level INT NOT NULL CHECK (grade_level BETWEEN 0 AND 12),
     room VARCHAR(50),
     capacity INT DEFAULT 35,
-    academic_year_id,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW(),
     UNIQUE(tenant_id, academic_year_id, name)
