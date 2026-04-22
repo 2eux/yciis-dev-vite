@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: edusys-api
+    ports:
+      - "8080:8080"
+    environment:
+      - SERVER_PORT=8080
+      - DATABASE_URL=postgres://edusys:edusys123@db:5432/edusys?sslmode=disable
+      - REDIS_URL=redis://cache:6379
+      - JWT_SECRET=edusys-super-secret-key-change-in-production-2024
+      - ENVIRONMENT=development
+      - DEBUG=true
+    depends_on:
+      - db
+      - cache
+    networks:
+      - edusys-network
+    restart: unless-stopped
+    volumes:
+      - uploads:/app/uploads
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: edusys-web
+    ports:
+      - "3000:3000"
+    environment:
+      - API_URL=http://api:8080
+      - NODE_ENV=development
+    depends_on:
+      - api
+    networks:
+      - edusys-network
+    restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    container_name: edusys-db
+    environment:
+      - POSTGRES_USER=edusys
+      - POSTGRES_PASSWORD=edusys123
+      - POSTGRES_DB=edusys
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - edusys-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U edusys -d edusys"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  cache:
+    image: redis:7-alpine
+    container_name: edusys-cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - edusys-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio
+    container_name: edusys-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=edusys
+      - MINIO_ROOT_PASSWORD=edusys123
+    volumes:
+      - s3_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - edusys-network
+    restart: unless-stopped
+
+networks:
+  edusys-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  s3_data:
+  uploads:
