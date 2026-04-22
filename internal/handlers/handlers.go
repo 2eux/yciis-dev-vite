@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/edusyspro/edusys/internal/config"
@@ -404,7 +405,7 @@ func (h *StudentHandler) List(c *fiber.Ctx) error {
 
 	var students []fiber.Map
 	for rows.Next() {
-		var studentID, userID, secID uuid.UUID
+		var studentID, userID uuid.UUID
 		var firstName, lastName, gender, sectionName, rollNumber, avatarURL string
 		var dob *time.Time
 		var status string
