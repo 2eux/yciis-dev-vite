@@ -28,7 +28,7 @@ version: '3.8'
 services:
   api:
     build:
-      context: ..
+      context: .
       dockerfile: Dockerfile
     image: ghcr.io/edusyspro/edusys-api:${VERSION:-latest}
     container_name: edusys-api
@@ -48,7 +48,7 @@ services:
 
   web:
     build:
-      context: ../web
+      context: ./web
       dockerfile: Dockerfile
     image: ghcr.io/edusyspro/edusys-web:${VERSION:-latest}
     container_name: edusys-web
