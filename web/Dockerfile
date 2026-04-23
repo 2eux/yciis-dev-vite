@@ -5,8 +5,8 @@ WORKDIR /app
 # Copy package management files first for caching
 COPY package.json package-lock.json* ./
 
-# Install dependencies cleanly
-RUN npm install
+# Install all dependencies (including devDependencies required for build)
+RUN NODE_ENV=development npm install
 
 # Copy all application files
 COPY . .
