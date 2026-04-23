@@ -27,6 +27,9 @@ version: '3.8'
 
 services:
   api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
     image: ghcr.io/edusyspro/edusys-api:${VERSION:-latest}
     container_name: edusys-api
     ports:
@@ -44,6 +47,9 @@ services:
       retries: 3
 
   web:
+    build:
+      context: ../web
+      dockerfile: Dockerfile
     image: ghcr.io/edusyspro/edusys-web:${VERSION:-latest}
     container_name: edusys-web
     ports:

@@ -142,10 +142,12 @@ func main() {
 	// ─── API Routes ─────────────────────────────────────────────────
 	api := app.Group("/api/v1")
 
-	// Tenant middleware now trusts JWT tenant_id, not client headers
-	api.Use(middleware.TenantMiddleware(cfg))
-
+	// Register auth routes FIRST so they can be accessed without a tenant context
 	routes.RegisterAuthRoutes(api, db, cfg)
+
+	// Tenant middleware now trusts JWT tenant_id, not client headers
+	// Applied to all subsequent routes
+	api.Use(middleware.TenantMiddleware(cfg))
 	routes.RegisterStudentRoutes(api, db, cfg)
 	routes.RegisterAcademicRoutes(api, db, cfg)
 	routes.RegisterAttendanceRoutes(api, db, cfg)
