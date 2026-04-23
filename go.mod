@@ -1,4 +1,4 @@
-module github.com/edusyspro/edusys
+module github.com/2eux/yciis-dev-vite
 
 go 1.21
 

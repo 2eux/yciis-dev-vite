@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"github.com/edusyspro/edusys/internal/config"
+	"github.com/2eux/yciis-dev-vite/internal/config"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )

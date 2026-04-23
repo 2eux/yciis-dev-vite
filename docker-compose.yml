@@ -1,38 +1,42 @@
 version: '3.8'
 
 services:
+  # =============================================
+  # EDUSYS PRO - Backend API
+  # =============================================
   api:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: api.Dockerfile
     container_name: edusys-api
     ports:
       - "${SERVER_PORT:-8080}:8080"
-    env_file:
-      - .env
     environment:
       - SERVER_PORT=8080
-      - DATABASE_URL=postgres://${POSTGRES_USER:-edusys}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-edusys}?sslmode=disable
-      - REDIS_URL=redis://cache:6379
-      - ENVIRONMENT=${ENVIRONMENT:-development}
-      - DEBUG=${DEBUG:-false}
-    depends_on:
-      db:
-        condition: service_healthy
-      cache:
-        condition: service_healthy
+      - NODE_ENV=${NODE_ENV:-production}
+      # Supabase - REQUIRED
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+      # JWT
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRY_MINUTES=${JWT_EXPIRY_MINUTES:-15}
+      - REFRESH_TOKEN_EXPIRY_DAYS=${REFRESH_TOKEN_EXPIRY_DAYS:-30}
+      # Redis (optional)
+      - REDIS_URL=${REDIS_URL:-}
+    env_file:
+      - .env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     networks:
       - edusys-network
-    restart: unless-stopped
-    volumes:
-      - uploads:/app/uploads
-    # Security: drop unnecessary capabilities
-    security_opt:
-      - no-new-privileges:true
-    read_only: true
-    tmpfs:
-      - /tmp
 
+  # =============================================
+  # EDUSYS PRO - Frontend WebApp
+  # =============================================
   web:
     build:
       context: ./web
@@ -41,80 +45,21 @@ services:
     ports:
       - "${WEB_PORT:-3000}:3000"
     environment:
-      - API_URL=http://api:8080
-      - NODE_ENV=${ENVIRONMENT:-development}
+      - NODE_ENV=${NODE_ENV:-production}
+      - VITE_SUPABASE_URL=${SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - VITE_API_URL=http://api:8080
+    env_file:
+      - .env
+    restart: unless-stopped
     depends_on:
       - api
     networks:
       - edusys-network
-    restart: unless-stopped
-    security_opt:
-      - no-new-privileges:true
-
-  db:
-    image: postgres:15-alpine
-    container_name: edusys-db
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER:-edusys}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
-      - POSTGRES_DB=${POSTGRES_DB:-edusys}
-    # Do NOT expose DB port in production — only accessible within the network
-    # Uncomment for local development only:
-    # ports:
-    #   - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - edusys-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-edusys} -d ${POSTGRES_DB:-edusys}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  cache:
-    image: redis:7-alpine
-    container_name: edusys-cache
-    # Do NOT expose Redis port in production
-    # ports:
-    #   - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - edusys-network
-    restart: unless-stopped
-    # Require password for Redis
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  minio:
-    image: minio/minio
-    container_name: edusys-minio
-    # Do NOT expose MinIO ports in production
-    # ports:
-    #   - "9000:9000"
-    #   - "9001:9001"
-    environment:
-      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-edusys}
-      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
-    volumes:
-      - s3_data:/data
-    command: server /data --console-address ":9001"
-    networks:
-      - edusys-network
-    restart: unless-stopped
 
 networks:
   edusys-network:
     driver: bridge
 
 volumes:
-  postgres_data:
-  redis_data:
-  s3_data:
-  uploads:
+  edusys-data:

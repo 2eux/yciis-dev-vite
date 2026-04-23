@@ -3,7 +3,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Version-1.0.0-blue?style=for-the-badge&logo=version" alt="Version" />
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License" />
-  <img src="https://img.shields.io/badge/Go-1.21+-00ADD8?style=for-the-badge&logo=go" alt="Go" />
+  <img src="https://img.shields.io/badge/Supabase-3FCF8E?style=for-the-badge&logo=supabase" alt="Supabase" />
   <img src="https://img.shields.io/badge/React-18+-61DAFB?style=for-the-badge&logo=react" alt="React" />
 </p>
 
@@ -74,14 +74,13 @@ A comprehensive, enterprise-grade School ERP (Enterprise Resource Planning) syst
 
 ## 🛠 Tech Stack
 
-### Backend
+### Database & Backend
 | Technology | Purpose |
 |-----------|---------|
-| **Go 1.21+** | Primary language (Fiber framework) |
-| **PostgreSQL 15** | Primary database |
-| **Redis 7** | Cache & session storage |
+| **Supabase** | PostgreSQL + Auth + Storage + Realtime |
+| **Go 1.21+ (Optional)** | Custom API backend |
 | **JWT** | Authentication |
-| **bcrypt** | Password hashing |
+| **Redis (Optional)** | Session caching |
 
 ### Frontend
 | Technology | Purpose |
@@ -92,11 +91,13 @@ A comprehensive, enterprise-grade School ERP (Enterprise Resource Planning) syst
 | **Recharts** | Data visualization |
 | **Zustand** | State management |
 | **React Query** | Data fetching |
+| **Supabase JS** | Database client |
 
 ### DevOps & Tools
 | Technology | Purpose |
 |-----------|---------|
 | **Docker** | Containerization |
+| **Coolify** | Deployment platform |
 | **Vite** | Build tool |
 | **ESLint** | Code linting |
 
@@ -436,60 +437,97 @@ POST   /api/v1/ai/chat          - AI Chatbot
 
 | Software | Version | Purpose |
 |----------|---------|---------|
-| **Go** | 1.21+ | Backend runtime |
+| **Supabase Account** | Free tier works | Database + Auth |
 | **Node.js** | 18+ | Frontend runtime |
-| **PostgreSQL** | 15+ | Database |
-| **Redis** | 7+ | Cache (optional) |
 | **Docker** | Latest | Containerization |
+| **Coolify** | Latest | Deployment (optional) |
 
-### Option 1: Docker Setup (Recommended)
+### Option 1: Supabase + Local Development (Recommended)
+
+#### Step 1: Set up Supabase
+
+1. Create account at [supabase.com](https://supabase.com)
+2. Create new project
+3. Go to **SQL Editor** and run the schema:
+   ```bash
+   # Copy content from supabase/schema.sql and run in Supabase SQL Editor
+   ```
+
+4. Get your credentials from **Settings > API**:
+   - Project URL
+   - `service_role` key (keep secret!)
+
+#### Step 2: Configure Environment
+
+```bash
+# Copy environment file
+cp .env.example .env
+
+# Edit .env with your Supabase credentials:
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_KEY=your-service-role-key
+JWT_SECRET=generate-a-strong-random-string
+```
+
+#### Step 3: Start Frontend
+
+```bash
+# Navigate to web directory
+cd web
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+Access the application at http://localhost:5173
+
+---
+
+### Option 2: Deploy with Docker
 
 ```bash
 # Clone the repository
-git clone https://github.com/edusyspro/edusys.git
-cd edusys
-
-# Start all services
-docker-compose up -d
-
-# Access the application
-# API: http://localhost:8080
-# Web: http://localhost:3000
-```
-
-### Option 2: Cloud Deployment (Coolify)
-Edusys Pro is optimized for deployment via **Coolify**.
-
-1. Connect your GitHub/GitLab repository to Coolify.
-2. Select **Dockerfile** as the build pack.
-3. Configure Environment Variables in the Coolify dashboard (see [.env.example](.env.example)).
-4. Coolify will automatically build and deploy your container on every push to `main`.
-
-### Option 3: Local Development
-
-#### Backend Setup
-
-```bash
-# Navigate to project root
-cd edusys
+git clone https://github.com/your-username/edusys-pro.git
+cd edusys-pro
 
 # Copy environment file
 cp .env.example .env
 
-# Edit .env with your settings
-# Required: DATABASE_URL, JWT_SECRET
+# Edit .env with your Supabase credentials
+nano .env
 
-# Install Go dependencies
-go mod download
+# Start with Docker Compose
+docker-compose up -d
 
-# Run migrations (if using local PostgreSQL)
-# Create database: createdb edusys
-
-# Start the server
-go run ./cmd/server
+# Access:
+# Web: http://localhost:3000
 ```
 
-#### Frontend Setup
+---
+
+### Option 3: Deploy with Coolify
+
+1. **Create Supabase Project** (if not done)
+   - Run `supabase/schema.sql` in SQL Editor
+
+2. **Connect to Coolify**
+   - Create new project in Coolify
+   - Add resource "Docker Compose"
+   - Use content from `coolify/compose.yaml`
+
+3. **Set Environment Variables** in Coolify:
+   ```
+   VITE_SUPABASE_URL=your-supabase-url
+   VITE_SUPABASE_ANON_KEY=your-anon-key
+   SUPABASE_SERVICE_KEY=your-service-key
+   JWT_SECRET=your-random-secret
+   ```
+
+4. **Deploy** - Coolify will build and deploy automatically
 
 ```bash
 # Navigate to web directory
