@@ -12,6 +12,9 @@ RUN go mod tidy
 
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /server ./cmd/server
 
+# Ensure web/public exists so the COPY command in the next stage doesn't fail
+RUN mkdir -p /app/web/public
+
 FROM alpine:3.19
 
 RUN apk add --no-cache ca-certificates tzdata
