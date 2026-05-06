@@ -1,582 +1,294 @@
 # Edusys Pro - Enterprise School ERP System
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-1.0.0-blue?style=for-the-badge&logo=version" alt="Version" />
-  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License" />
-  <img src="https://img.shields.io/badge/Supabase-3FCF8E?style=for-the-badge&logo=supabase" alt="Supabase" />
-  <img src="https://img.shields.io/badge/React-18+-61DAFB?style=for-the-badge&logo=react" alt="React" />
+  <img src="https://img.shields.io/badge/Version-1.0.0-blue?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Convex-8B5CF6?style=for-the-badge&logo=convex" />
+  <img src="https://img.shields.io/badge/React-18+-61DAFB?style=for-the-badge&logo=react" />
 </p>
 
-A comprehensive, enterprise-grade School ERP (Enterprise Resource Planning) system built with modern technologies. Edusys Pro handles all school operations including academics, administration, finance, HR, and more.
+Enterprise-grade School ERP powered by **Convex** (serverless backend) and **React**. Real-time, multi-tenant, and AI-ready.
 
 ---
 
-## 📋 Table of Contents
+## 📋 Contents
 
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [System Architecture](#system-architecture)
-- [DFD - Data Flow Diagrams](#dfd---data-flow-diagrams)
+- [Data Flow Diagrams](#data-flow-diagrams)
 - [Database Schema](#database-schema)
-- [API Endpoints](#api-endpoints)
-- [Installation Guide](#installation-guide)
+- [Convex API](#convex-api)
+- [Installation](#installation)
 - [Project Structure](#project-structure)
+- [Deployment](#deployment)
 - [Security](#security)
-- [AI Integration](#ai-integration)
 - [Roadmap](#roadmap)
-- [License](#license)
 
 ---
 
 ## ✨ Features
 
-### Core Modules
-- **Authentication & RBAC** - JWT-based auth with role-based access control + 2FA (Google Authenticator)
-- **Multi-tenant** - SaaS-ready multi-school support
-- **Audit Logging** - Full traceability of all actions
-
-### Academic System
-- **Student Management** - Profile, family, documents, health records
-- **Admission CRM** - Lead → Prospect → Student pipeline
-- **Timetable Engine** - Auto-generation of schedules
-- **Subjects & Curriculum** - Subject mapping and teacher assignment
-- **Attendance** - QR/biometric integration, real-time parent notifications
-
-### Examination & Grading
-- **Exam Builder** - Create exams with question banks
-- **Mark Entry** - Grade student submissions
-- **Report Cards** - PDF export with analytics
-
-### Finance & Accounting
-- **Fee Structure Engine** - Flexible fee categories
-- **Billing & Invoicing** - Automated invoicing
-- **Online Payments** - Midtrans/Xendit integration (Indonesia)
-- **Financial Reports** - Comprehensive reporting
-
-### HR & Payroll
-- **Staff Management** - Employee records
-- **Leave Management** - Approval workflows
-- **Payroll Automation** - Salary processing
-- **Recruitment** - AI-powered CV screening
-
-### LMS (Learning Management)
-- **Course Builder** - Video/content upload
-- **Assignments & Quizzes** - Interactive learning
-- **Progress Tracking** - Student analytics
-
-### Additional Modules
-- **Library** - Book tracking system
-- **Transport** - Route planning, GPS tracking
-- **Communication** - WhatsApp, Email, Push notifications
-- **Analytics** - Real-time dashboards, KPIs, AI predictions
+| Module | Features |
+|--------|----------|
+| **Auth** | JWT RBAC, Google OAuth, Google Authenticator 2FA, audit logs |
+| **Students** | Master data, family/guardians, documents, health notes, class mapping |
+| **Academic** | Subjects, sections, curriculum, timetable engine, teacher assignments |
+| **Attendance** | Daily student marks, QR/biometric, real-time parent push |
+| **Admission CRM** | Lead → Prospect → Student pipeline, online forms, approvals |
+| **Exams** | Builder, question bank, grading, report cards (PDF) |
+| **LMS** | Course builder, video/content, assignments, quizzes, progress |
+| **Finance** | Fee structures, invoicing, online payments, reports |
+| **HR** | Staff profiles, leave management, payroll automation |
+| **Library** | Book catalog, issue/return, stock tracking |
+| **Transport** | Routes, vehicles, GPS, student boarding logs |
+| **Analytics** | Dashboard, KPIs, AI predictions, anomaly detection |
 
 ---
 
 ## 🛠 Tech Stack
 
-### Database & Backend
-| Technology | Purpose |
-|-----------|---------|
-| **Supabase** | PostgreSQL + Auth + Storage + Realtime |
-| **Go 1.21+ (Optional)** | Custom API backend |
-| **JWT** | Authentication |
-| **Redis (Optional)** | Session caching |
-
-### Frontend
-| Technology | Purpose |
-|-----------|---------|
-| **React 18** | UI framework |
-| **TypeScript** | Type safety |
-| **Tailwind CSS** | Styling (shadcn/ui) |
-| **Recharts** | Data visualization |
-| **Zustand** | State management |
-| **React Query** | Data fetching |
-| **Supabase JS** | Database client |
-
-### DevOps & Tools
-| Technology | Purpose |
-|-----------|---------|
-| **Docker** | Containerization |
-| **Coolify** | Deployment platform |
-| **Vite** | Build tool |
-| **ESLint** | Code linting |
+| Layer | Technology |
+|-------|-----------|
+| **Backend** | Convex (serverless: DB, Auth, Functions, Real-time, File Storage) |
+| **Frontend** | React 18 + TypeScript + Vite |
+| **UI** | Tailwind CSS + shadcn/ui |
+| **State** | Zustand |
+| **Charts** | Recharts |
+| **Icons** | Lucide React |
+| **Deploy** | Docker + Coolify |
 
 ---
 
 ## 🏗 System Architecture
 
 ```
-┌────────────────────────────────────────���────────────────────────────┐
-│                     CLIENT LAYER                           │
-├─────────────────────────────────────────────────────────────┤
-│  React + TypeScript + Tailwind CSS + shadcn/ui              │
-│  (SPA with Vite)                                         │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                     API GATEWAY                           │
-├─────────────────────────────────────────────────────────────┤
-│  Go Fiber + JWT Auth + Rate Limiting + CORS               │
-│  Port: 8080                                            │
-└─────────────────────────────────────────────────────────────┘
-                              │
-         ┌────────────────────┬────────────────────┐
-         ▼                    ▼                    ▼
-┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│  Core API    │    │  Analytics  │    │   Queue     │
-│  (REST)      │    │   (OLAP)    │    │  (Async)    │
-└──────────────┘    └──────────────┘    └──────────────┘
-         │                    │                    │
-         └────────────────────┼────────────────────┘
-                              ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                   DATA LAYER                             │
-├─────────────────────────────────────────────────────────────┤
-│  PostgreSQL        Redis           MinIO/S3              │
-│  (OLTP)           (Cache)         (Files)               │
-└─────────────────────────────────────────────────────────────┘
+React SPA (Vite) ──► Convex React Client ──► Convex Cloud
+                        │
+                        ├── Queries (read data, real-time subscriptions)
+                        ├── Mutations (write data, ACID transactions)
+                        ├── Auth (JWT, Google OAuth, magic link)
+                        ├── File Storage (images, documents)
+                        └── Scheduled Functions (cron jobs)
+
+Optional: Go API Gateway (port 8080) for rate limiting / custom logic
 ```
+
+**Key:** Convex replaces PostgreSQL, Redis, S3, REST server, and WebSocket server — all in one platform.
 
 ---
 
-## 📊 DFD - Data Flow Diagrams
+## 📊 Data Flow Diagrams
 
-### Level 0: Context Diagram
-
-```
-┌────────────────────────────────────────────────────────────────┐
-│                                                        │
-│   ┌──────────────┐                                     │
-│   │   EXTERNAL  │                                     │
-│   │   ENTITIES │                                     │
-│   └─────┬──────┘                                     │
-│         │                                            │
-│    ┌────▼───────────��───┐                              │
-│    │                 │                              │
-│    │  EDUSYS PRO      │ ◄─── System                │
-│    │                 │                              │
-│    └───────┬─────────┘                              │
-│            │                                       │
-│    ┌──────▼──────┐                              │
-│    │  EXTERNAL   │                              │
-│    │  ENTITIES  │                              │
-│    └───────────┘                              │
-└──────────────────────────────────────────────────────┘
-```
-
-External Entities:
-- **Students** - View grades, attendance, submit assignments
-- **Parents** - View reports, make payments, communicate
-- **Teachers** - Mark attendance, upload grades, manage courses
-- **Admin** - Full system access, reports, settings
-- **HR/Finance** - Payroll, fee management
-
-### Level 1: Main Processes
+### Level 0 - Context Diagram
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                                                                     │
-│  ┌─────────┐      ┌─────────┐      ┌─────────┐      ┌─────────┐      │
-│  │Student │      │Academic │      │Finance │      │   HR   │      │
-│  │Module  │      │Module   │      │Module  │      │Module │      │
-│  └──┬────┘      └──┬────┘      └──┬────┘      └──┬────┘      │
-│     │             │             │            │            │          │
-│     └─────────────┴─────────────┴────────────┘            │
-│                           │                              │          │
-│                    ┌────────▼────────┐    ┌──────▼─────┐   │
-│                    │              │    │           │   │
-│                    │  PROCESS    │    │  PROCESS  │   │
-│                    │   1.0       │    │   2.0     │   │
-│                    │  Core Edu   │    │  Security  │   │
-│                    │  System   │    │  System   │   │
-│                    └──────┬─────┘    └──────┬─────┘   │
-│                           │               │          │
-│                           └───────┬───────┘          │
-│                                   │              │
-│                    ┌──────────────▼──────────────┐│
-│                    │                             ││
-│                    │     DATA STORE           ││
-│                    │  ┌──────────┬──────────┐ ││
-│                    │  │Database  │   Cache  │ ││
-│                    │  │(Postgres)│ (Redis) │  ││
-│                    │  └──────────┴──────────┘ ││
-│                    └─────────────────────────────┘│
-└──────────────────────────────────────────────────────���─���────┘
+  ┌──────────┐     ┌──────────────┐     ┌──────────┐
+  │ Students │────►│              │────►│ Reports  │
+  └──────────┘     │   EDUSYS     │     └──────────┘
+  ┌──────────┐     │     PRO      │     ┌──────────┐
+  │ Teachers │────►│  (Convex)    │────►│ Analytics│
+  └──────────┘     │              │     └──────────┘
+  ┌──────────┐     │              │     ┌──────────┐
+  │ Parents  │────►│              │────►│ Notices  │
+  └──────────┘     └──────────────┘     └──────────┘
 ```
 
-### Level 2: Core Educational Process
+### Level 1 - Process Flow
 
 ```
-┌────────────────────────────────────────────────────────────────────────┐
-│                 STUDENT MANAGEMENT PROCESS             │
-│                                                        │
-│   ┌──────────┐     ┌──────────┐     ┌──────────┐      │
-│   │ Admission│ ──► │ Enroll   │ ──► │ Class   │      │
-│   │   Data   │     │ Student │     │ Assign │      │
-│   └──────────┘     └──────────┘     └──────────┘      │
-│                                                 │    │
-│   ┌──────────┐     ┌──────────┐     ┌──────────┐  │    │
-│   │  Exam   │ ◄── │  Grade   │ ◄── │Attendance│  │    │
-│   │ Results │     │  Entry   │     │  Mark   │   │    │
-│   └──────────┘     └──────────┘     └──────────┘  │    │
-│                    │                           │        │
-│                    └───────────┬───────────┘        │
-│                                ▼                 │
-│   ┌─────────────────────────────────────────┐    │
-│   │         STUDENT DATABASE                │    │
-│   │  - Personal Info   - Academic History │    │
-│   │  - Family Data   - Fee Records       │    │
-│   │  - Documents    - Attendance      │    │
-│   └─────────────────────────────────┘    │
-└────────────────────────────────────────────────┘
+Admission ──► Enrollment ──► Class Assignment ──► Timetable
+                                                    │
+Attendance ◄────────────────────────────────────────┘
+    │
+    ▼
+Grading ──► Report Cards ──► Parent Portal
+                                │
+Fee Management ◄───────────────┘
+    │
+    ▼
+Payment Gateway ──► Financial Reports
 ```
 
 ### Data Flows
 
-| Flow ID | From Process | To Process | Data Description |
-|--------|-------------|-----------|----------------|
-| D1 | Student Portal | Admission | Registration Form |
-| D2 | Admission | Student Database | New Student Record |
-| D3 | Student Database | Timetable | Student Class Info |
-| D4 | Teacher | Attendance | Daily Attendance |
-| D5 | Exam System | Report Card | Grade Data |
-| D6 | Finance | Payment Gateway | Fee Payment |
-| D7 | Analytics | Admin Dashboard | Aggregated Stats |
+| ID | From | To | Description |
+|----|------|-----|-------------|
+| D1 | Student Portal | Admission | Registration form |
+| D2 | Admission | Students | New student record |
+| D3 | Teacher | Attendance | Daily marks |
+| D4 | Exam System | Report Card | Grade data |
+| D5 | Finance | Payment Gateway | Fee transaction |
+| D6 | Analytics | Dashboard | Aggregated stats |
+| D7 | Scheduler | Notifications | Push alerts |
 
 ---
 
 ## 🗄 Database Schema
 
+Convex uses a **document-based schema** defined in `convex/schema.ts`. Full schema: 25+ tables.
+
 ### Core Tables
 
-```sql
--- Tenants (Multi-school)
-CREATE TABLE tenants (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name VARCHAR(255) NOT NULL,
-    code VARCHAR(50) UNIQUE NOT NULL,
-    timezone VARCHAR(50) DEFAULT 'Asia/Jakarta',
-    is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP DEFAULT NOW()
-);
+```typescript
+// Tenants (multi-school isolation)
+tenants: defineTable({
+  name: v.string(),
+  code: v.string(),
+  timezone: v.string(),
+  isActive: v.boolean(),
+}).index("by_code", ["code"]),
 
--- Users (All roles)
-CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    tenant_id UUID REFERENCES tenants(id),
-    email CITEXT UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(20) NOT NULL CHECK (role IN ('super_admin', 'admin', 'teacher', 'student', 'parent', 'finance', 'hr')),
-    first_name VARCHAR(100) NOT NULL,
-    last_name VARCHAR(100),
-    two_secret_enabled BOOLEAN DEFAULT false,
-    two_secret_secret VARCHAR(255),
-    created_at TIMESTAMP DEFAULT NOW()
-);
+// User profiles linked to Convex Auth
+userProfiles: defineTable({
+  userId: v.string(),         // Convex Auth user ID
+  tenantId: v.id("tenants"),
+  role: v.union(v.literal("admin"), v.literal("teacher"), ...),
+  firstName: v.string(),
+  twoFAEnabled: v.boolean(),
+}).index("by_userId", ["userId"]),
 
--- Students
-CREATE TABLE students (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    tenant_id UUID REFERENCES tenants(id),
-    user_id UUID REFERENCES users(id),
-    student_id VARCHAR(50) UNIQUE NOT NULL,
-    gender VARCHAR(10),
-    date_of_birth DATE,
-    emergency_contact_phone VARCHAR(20),
-    created_at TIMESTAMP DEFAULT NOW()
-);
+// Students
+students: defineTable({
+  tenantId: v.id("tenants"),
+  studentId: v.string(),       // Auto-generated: STU20250001
+  firstName: v.string(),
+  lastName: v.string(),
+  sectionId: v.id("sections"),
+  status: v.string(),
+}).index("by_studentId", ["studentId"])
+ .index("by_section", ["sectionId"]),
 
--- Academic Years
-CREATE TABLE academic_years (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    tenant_id UUID REFERENCES tenants(id),
-    name VARCHAR(20) NOT NULL,
-    start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
-    is_current BOOLEAN DEFAULT false,
-    UNIQUE(tenant_id, name)
-);
+// Attendance (realtime-enabled)
+attendance: defineTable({
+  studentId: v.id("students"),
+  sectionId: v.id("sections"),
+  date: v.string(),
+  status: v.union(v.literal("present"), v.literal("absent"), ...),
+}).index("by_student_date", ["studentId", "date"])
+ .index("by_section_date", ["sectionId", "date"]),
 
--- Sections (Classes)
-CREATE TABLE sections (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    tenant_id UUID REFERENCES tenants(id),
-    academic_year_id UUID REFERENCES academic_years(id),
-    name VARCHAR(50) NOT NULL,
-    grade_level INT NOT NULL,
-    room VARCHAR(50),
-    capacity INT DEFAULT 35
-);
-
--- Student Attendance
-CREATE TABLE student_attendance (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    student_id UUID REFERENCES students(id),
-    section_id UUID REFERENCES sections(id),
-    date DATE NOT NULL,
-    status VARCHAR(20) CHECK (status IN ('present', 'absent', 'late', 'excused')),
-    UNIQUE(student_id, date)
-);
-
--- Fee Structures
-CREATE TABLE fee_structures (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    tenant_id UUID REFERENCES tenants(id),
-    name VARCHAR(200) NOT NULL,
-    amount DECIMAL(15,2) NOT NULL,
-    due_date DATE
-);
-
--- Student Fees
-CREATE TABLE student_fees (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    student_id UUID REFERENCES students(id),
-    fee_structure_id UUID REFERENCES fee_structures(id),
-    amount DECIMAL(15,2) NOT NULL,
-    status VARCHAR(20) CHECK (status IN ('pending', 'paid', 'overdue'))
-);
-
--- Audit Logs
-CREATE TABLE audit_logs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    tenant_id UUID REFERENCES tenants(id),
-    user_id UUID REFERENCES users(id),
-    action VARCHAR(100) NOT NULL,
-    module VARCHAR(50) NOT NULL,
-    ip_address VARCHAR(45),
-    created_at TIMESTAMP DEFAULT NOW()
-);
+// Fees with payment tracking
+studentFees: defineTable({
+  studentId: v.id("students"),
+  amount: v.float64(),
+  status: v.union(v.literal("pending"), v.literal("paid"), ...),
+  paidAmount: v.float64(),
+}).index("by_student", ["studentId"])
+ .index("by_status", ["status"]),
 ```
+
+Full schema: `convex/schema.ts` — 25 tables with indexes and validators.
 
 ---
 
-## 📡 API Endpoints
+## 📡 Convex API
 
-### Authentication
-```
-POST   /api/v1/auth/login              - Login
-POST   /api/v1/auth/login-2fa          - Login with 2FA
-POST   /api/v1/auth/logout             - Logout
-POST   /api/v1/auth/refresh            - Refresh token
-POST   /api/v1/auth/forgot-password    - Request password reset
-POST   /api/v1/auth/reset-password     - Reset password with token
-POST   /api/v1/auth/verify-email       - Verify email token
-GET    /api/v1/auth/me                 - Current user info
-PUT    /api/v1/auth/profile            - Update user profile
-GET    /api/v1/2fa/status              - Get 2FA status
-GET    /api/v1/2fa/setup               - Setup 2FA (get QR code)
-POST   /api/v1/2fa/enable              - Enable 2FA
-POST   /api/v1/2fa/disable             - Disable 2FA
-POST   /api/v1/2fa/verify              - Verify 2FA code
-```
+Convex replaces REST endpoints with **type-safe queries and mutations** that are called directly from the frontend with zero API glue code.
 
 ### Students
-```
-GET    /api/v1/students                - List students (filtered by tenant)
-POST   /api/v1/students                - Create student (Admin only)
-GET    /api/v1/students/:id            - Get student details
-PUT    /api/v1/students/:id            - Update student (Admin only)
-DELETE /api/v1/students/:id            - Soft delete student (Super Admin)
-GET    /api/v1/students/:id/profile    - Get extended profile
-GET    /api/v1/students/:id/family     - Get family/parent info
-POST   /api/v1/students/:id/family     - Add family member
-GET    /api/v1/students/:id/attendance - Student attendance history
-GET    /api/v1/students/:id/grades     - Student grade records
-GET    /api/v1/students/:id/fees       - Student fee status
-GET    /api/v1/students/:id/reports    - Student performance reports
-```
 
-### Academic
-```
-GET    /api/v1/academic-years      - List years
-GET    /api/v1/sections          - List classes
-POST   /api/v1/sections           - Create class
-GET    /api/v1/subjects           - List subjects
-GET    /api/v1/timetables         - Timetable
-GET    /api/v1/timetables/generate - Auto-generate
+```typescript
+// Query: List students
+const students = useQuery(api.students.list, { status: "active" })
+
+// Mutation: Create student
+const createStudent = useMutation(api.students.create)
+await createStudent({ firstName: "John", lastName: "Doe", sectionId: "..." })
+
+// Query: Get student by ID
+const student = useQuery(api.students.getById, { id: studentId })
+
+// Mutation: Update student
+const updateStudent = useMutation(api.students.update)
+await updateStudent({ id: studentId, address: "New address" })
+
+// Mutation: Remove (soft delete → status: inactive)
+const removeStudent = useMutation(api.students.remove)
+await removeStudent({ id: studentId })
 ```
 
 ### Attendance
-```
-GET    /api/v1/attendance/students - Student attendance
-POST   /api/v1/attendance/students - Mark attendance
-GET    /api/v1/attendance/reports - Attendance reports
-POST   /api/v1/attendance/qr/scan - QR scan attendance
+
+```typescript
+// Query: Get section attendance for a date
+const attendance = useQuery(api.attendance.listBySection, { sectionId, date })
+
+// Mutation: Mark single or bulk attendance
+const markAttendance = useMutation(api.attendance.mark)
+await markAttendance({ records: [{ studentId, sectionId, date, status: "present" }] })
+
+// Query: Attendance summary with percentages
+const summary = useQuery(api.attendance.getSummary, { studentId, academicYearId })
+// Returns: { present: 180, absent: 10, late: 5, total: 195, percentage: 95 }
 ```
 
-### Finance
-```
-GET    /api/v1/fees/structures   - Fee structures
-POST   /api/v1/fees/assign       - Assign fees
-GET    /api/v1/fees/students     - Student fees
-POST   /api/v1/fees/students/:id/pay - Process payment
-GET    /api/v1/fees/reports      - Financial reports
+### Dashboard
+
+```typescript
+// Query: School overview stats
+const stats = useQuery(api.helpers.getDashboardStats, {})
+// Returns: { totalStudents, totalStaff, totalSections, totalTeachers }
+
+// Query: Today's attendance
+const today = useQuery(api.helpers.getTodayAttendance, { date: "2025-04-23" })
+// Returns: { present, absent, late, total, percentage }
+
+// Query: Fee collection summary
+const fees = useQuery(api.helpers.getFeeSummary, {})
+// Returns: { collected, pending, overdue }
+
+// Query: Recent activity log
+const activities = useQuery(api.helpers.getRecentActivities, { limit: 10 })
 ```
 
-### HR
-```
-GET    /api/v1/hr/staff           - List staff
-POST   /api/v1/hr/staff          - Create staff
-GET    /api/v1/hr/leave         - Leave requests
-POST   /api/v1/hr/payroll       - Run payroll
-```
+### Real-time Subscriptions
 
-### Analytics
-```
-GET    /api/v1/analytics/dashboard - Dashboard data
-GET    /api/v1/analytics/kpi     - KPI metrics
-POST   /api/v1/ai/chat          - AI Chatbot
-```
+All Convex queries are **automatically real-time** — the UI updates instantly when data changes, with zero extra code.
 
 ---
 
-## 🚀 Installation Guide
+## 🚀 Installation
 
 ### Prerequisites
 
-| Software | Version | Purpose |
-|----------|---------|---------|
-| **Supabase Account** | Free tier works | Database + Auth |
-| **Node.js** | 18+ | Frontend runtime |
-| **Docker** | Latest | Containerization |
-| **Coolify** | Latest | Deployment (optional) |
+- **Node.js** 18+
+- **Convex account** (free tier at [convex.dev](https://convex.dev))
 
-### Option 1: Supabase + Local Development (Recommended)
-
-#### Step 1: Set up Supabase
-
-1. Create account at [supabase.com](https://supabase.com)
-2. Create new project
-3. Go to **SQL Editor** and run the schema:
-   ```bash
-   # Copy content from supabase/schema.sql and run in Supabase SQL Editor
-   ```
-
-4. Get your credentials from **Settings > API**:
-   - Project URL
-   - `service_role` key (keep secret!)
-
-#### Step 2: Configure Environment
+### Setup
 
 ```bash
-# Copy environment file
-cp .env.example .env
-
-# Edit .env with your Supabase credentials:
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_KEY=your-service-role-key
-JWT_SECRET=generate-a-strong-random-string
-```
-
-#### Step 3: Start Frontend
-
-```bash
-# Navigate to web directory
-cd web
-
-# Install dependencies
+# 1. Clone and install
+git clone https://github.com/edusyspro/edusys.git
+cd edusys/web
 npm install
 
-# Start development server
+# 2. Initialize Convex (one-time)
+cd ..                          # back to project root
+npx convex dev                 # creates convex.json + _generated/ types
+
+# 3. Start both Convex + Vite
+# Convex dev server: auto-started by step 2
+# Vite dev server:
+cd web
 npm run dev
 ```
 
-Access the application at http://localhost:5173
-
----
-
-### Option 2: Deploy with Docker
-
-```bash
-# Clone the repository
-git clone https://github.com/your-username/edusys-pro.git
-cd edusys-pro
-
-# Copy environment file
-cp .env.example .env
-
-# Edit .env with your Supabase credentials
-nano .env
-
-# Start with Docker Compose
-docker-compose up -d
-
-# Access:
-# Web: http://localhost:3000
-```
-
----
-
-### Option 3: Deploy with Coolify
-
-1. **Create Supabase Project** (if not done)
-   - Run `supabase/schema.sql` in SQL Editor
-
-2. **Connect to Coolify**
-   - Create new project in Coolify
-   - Add resource "Docker Compose"
-   - Use content from `coolify/compose.yaml`
-
-3. **Set Environment Variables** in Coolify:
-   ```
-   VITE_SUPABASE_URL=your-supabase-url
-   VITE_SUPABASE_ANON_KEY=your-anon-key
-   SUPABASE_SERVICE_KEY=your-service-key
-   JWT_SECRET=your-random-secret
-   ```
-
-4. **Deploy** - Coolify will build and deploy automatically
-
-```bash
-# Navigate to web directory
-cd web
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-
-# Access: http://localhost:3000
-```
+Access: **http://localhost:5173**
 
 ### Environment Variables
 
 ```env
-# Server
-SERVER_PORT=8080
-JWT_SECRET=your-super-secret-key
-ENVIRONMENT=development
-DEBUG=true
+# .env (auto-created by `npx convex dev`)
+VITE_CONVEX_URL=https://your-project.convex.cloud
 
-# Database
-DATABASE_URL=postgres://user:pass@localhost:5432/edusys?sslmode=disable
+# Optional: Google OAuth
+VITE_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
 
-# Redis (optional)
-REDIS_URL=redis://localhost:6379
-
-# Email (SMTP)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-app-password
-
-# Payments (Indonesia)
-MIDTRANS_KEY=your-midtrans-key
-XENDIT_KEY=your-xendit-key
-```
-
-### Building for Production
-
-```bash
-# Backend
-go build -o edusys-server ./cmd/server
-
-# Frontend
-cd web
-npm run build
+# Optional: Payments (Indonesia)
+MIDTRANS_CLIENT_KEY=
+MIDTRANS_SERVER_KEY=
+XENDIT_API_KEY=
 ```
 
 ---
@@ -585,112 +297,127 @@ npm run build
 
 ```
 edusys/
-├── cmd/
-│   └── server/
-│       └── main.go           # Entry point
-├── internal/
-│   ├���─ config/             # Configuration
-│   ├── database/          # Database connection
-│   ├── handlers/          # HTTP handlers
-│   ├── middleware/        # Auth, CORS, etc.
-│   ├── models/            # Data models
-│   ├── routes/            # Route definitions
-│   ├── totp/              # 2FA implementation
-│   └── utils/              # Utilities
-├── migrations/             # SQL migrations
-├── web/                   # Frontend (React)
+├── convex/                    # Convex backend
+│   ├── schema.ts              # 25+ tables with indexes
+│   ├── students.ts            # Student queries & mutations
+│   ├── attendance.ts          # Attendance queries & mutations
+│   ├── helpers.ts             # Auth, dashboard, utilities
+│   └── _generated/            # Auto-generated (npx convex dev)
+│       └── api.ts             # Type-safe API
+│
+├── web/                       # React frontend
 │   ├── src/
-│   │   ├── components/   # UI components
-│   │   ├── pages/        # Page routes
-│   │   ├── stores/       # Zustand stores
-│   │   ├── lib/          # Utilities
-│   │   └── styles/       # CSS
-│   ├── index.html
+│   │   ├── components/
+│   │   │   └── layout/        # Layout (sticky header nav)
+│   │   ├── pages/
+│   │   │   ├── Login.tsx      # Auth page
+│   │   │   ├── Dashboard.tsx  # Admin dashboard
+│   │   │   ├── Students.tsx   # Student management
+│   │   │   ├── Academic.tsx   # Academic module
+│   │   │   ├── Attendance.tsx # Attendance tracker
+│   │   │   ├── Exams.tsx      # Exam builder
+│   │   │   ├── Fees.tsx       # Finance
+│   │   │   ├── HR.tsx         # Staff management
+│   │   │   ├── LMS.tsx        # Learning management
+│   │   │   ├── Library.tsx    # Book tracking
+│   │   │   ├── Transport.tsx  # Routes & vehicles
+│   │   │   └── Settings.tsx   # System settings
+│   │   ├── stores/
+│   │   │   └── convex-auth.ts # Auth state (Zustand)
+│   │   ├── lib/
+│   │   │   ├── convex-hooks.ts # Typed hooks
+│   │   │   └── utils.ts       # Utility functions
+│   │   ├── App.tsx             # Root (ConvexProvider + Router)
+│   │   ├── main.tsx            # Entry point
+│   │   └── index.css           # Tailwind + shadcn/ui design system
+│   ├── Dockerfile
+│   ├── nginx.conf
 │   ├── package.json
-│   └── vite.config.ts
-├── docker-compose.yml
-├── Dockerfile
-├── go.mod
-├── go.sum
+│   ├── vite.config.ts
+│   └── tailwind.config.js
+│
+├── coolify/
+│   ├── compose.yaml           # Coolify deployment
+│   └── Dockerfile             # Go API (optional)
+│
+├── docker-compose.yml         # Local Docker
+├── .env.example
+├── REVIEW.md
+├── SPEC.md
+├── SECURITY.md
 └── README.md
 ```
 
 ---
 
-## 🔐 Security
+## 🐳 Deployment
 
-- ✅ JWT with short-lived access tokens (15 min)
-- ✅ Refresh token rotation (30 days)
-- ✅ Password hashing with bcrypt (cost 12)
-- ✅ Account lockout after 5 failed attempts
-- ✅ **Google Authenticator 2FA** support
-- ✅ Role-based access control (RBAC)
-- ✅ Rate limiting (100 req/min)
-- ✅ SQL injection prevention
-- ✅ XSS protection
-- ✅ TLS 1.3 for all connections
-- ✅ Full audit logging
-- ✅ Tenant data isolation
+### Docker (Local)
+
+```bash
+docker-compose up -d
+# Web: http://localhost:3000
+```
+
+### Convex Cloud (Production)
+
+```bash
+npx convex deploy              # Deploy backend to production
+cd web && npm run build        # Build frontend
+```
+
+### Coolify
+
+1. Deploy Convex backend: `npx convex deploy`
+2. Set `VITE_CONVEX_URL` to your production Convex URL
+3. Deploy `coolify/compose.yaml` on Coolify
 
 ---
 
-## 🤖 AI Integration
+## 🔐 Security
 
-### Features
-- **Smart Chatbot** - NLP-powered school assistant
-- **Performance Prediction** - ML-based student risk scoring
-- **Anomaly Detection** - Fee/attendance anomalies
-- **CV Screening** - Resume parsing & ranking
-- **Auto Timetable** - AI scheduling
+| Feature | Implementation |
+|---------|---------------|
+| **Authentication** | Convex Auth with JWT + Google OAuth |
+| **2FA** | Google Authenticator (TOTP) — `convex/totp.ts` |
+| **RBAC** | Row-level via Convex auth checks in queries/mutations |
+| **Multi-tenant** | tenantId filtering in every query |
+| **Audit Logs** | All mutations write to `auditLogs` table |
+| **Rate Limiting** | Handled by Convex platform |
+| **HTTPS** | Enforced by Convex Cloud |
+| **Input Validation** | Convex schema validators (`v.string()`, `v.union()`) |
 
-### API
-```
-POST /api/v1/ai/chat              - Chat with AI
-GET  /api/v1/ai/performance     - Student performance
-GET  /api/v1/ai/anomalies       - Anomaly detection
-```
+---
+
+## 🤖 AI Features (Roadmap)
+
+- Smart chatbot for parent/student queries
+- Student performance prediction (ML)
+- Auto report generation
+- Fee/attendance anomaly detection
+- CV screening for HR recruitment
 
 ---
 
 ## 🗓 Roadmap
 
-### v2.0 (Q2 2024)
-- [ ] Mobile apps (iOS/Android)
-- [ ] Parent portal
-- [ ] SMS integration
-- [ ] Advanced AI analytics
-
-### v2.1 (Q3 2024)
-- [ ] E-learning with video
-- [ ] Live classes
-- [ ] Certificate builder
-- [ ] Document management
-
-### v2.2 (Q4 2024)
-- [ ] AI chatbot improvements
-- [ ] Predictive analytics
-- [ ] Auto timetable engine
-- [ ] Blockchain for credentials
+| Version | Features |
+|---------|----------|
+| **v1.0** (Current) | Auth, Students, Attendance, Dashboard |
+| **v1.5** | Exams, Fees, HR, Library |
+| **v2.0** | LMS, Transport, Analytics |
+| **v2.5** | Mobile apps, AI chatbot, WhatsApp |
+| **v3.0** | Predictive analytics, auto timetable |
 
 ---
 
 ## 📄 License
 
-MIT License - see [LICENSE](LICENSE) for details.
-
----
-
-## 🙏 Acknowledgments
-
-- [Fiber](https://gofiber.io) - Express-inspired Go web framework
-- [shadcn/ui](https://ui.shadcn.com) - Beautiful component library
-- [Tailwind CSS](https://tailwindcss.com) - Utility-first CSS framework
-- [Recharts](https://recharts.org) - Composable charting library
-- [Lucide](https://lucide.dev) - Beautiful icons
+MIT — see [LICENSE](LICENSE)
 
 ---
 
 <p align="center">
-  <strong>Edusys Pro</strong> - Modern School Management System<br/>
-  Built with ❤️ for educational institutions
-</p>
+  <strong>Edusys Pro</strong> — Modern School ERP<br/>
+  Built with React + Convex
+</p>"# yciis-convex" 
