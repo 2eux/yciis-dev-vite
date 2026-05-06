@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/2eux/yciis-dev-vite/internal/config"
+	"github.com/edusyspro/edusys/internal/config"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"

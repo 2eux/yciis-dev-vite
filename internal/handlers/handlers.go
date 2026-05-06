@@ -6,9 +6,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/2eux/yciis-dev-vite/internal/config"
-	"github.com/2eux/yciis-dev-vite/internal/middleware"
-	"github.com/2eux/yciis-dev-vite/internal/models"
+	"github.com/edusyspro/edusys/internal/config"
+	"github.com/edusyspro/edusys/internal/middleware"
+	"github.com/edusyspro/edusys/internal/models"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"

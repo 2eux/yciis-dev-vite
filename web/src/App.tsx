@@ -1,5 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { ConvexProvider, ConvexReactClient } from "convex/react"
 import Layout from './components/layout/Layout'
 import Dashboard from './pages/Dashboard'
 import Login from './pages/Login'
@@ -13,25 +13,21 @@ import LMS from './pages/LMS'
 import Library from './pages/Library'
 import Transport from './pages/Transport'
 import Settings from './pages/Settings'
-import { useAuthStore } from './stores/auth'
+import { useConvexAuth } from './stores/convex-auth'
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5,
-      retry: 1,
-    },
-  },
-})
+const convexUrl = import.meta.env.VITE_CONVEX_URL
+if (!convexUrl) throw new Error('VITE_CONVEX_URL is required')
+
+const convex = new ConvexReactClient(convexUrl)
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated } = useConvexAuth()
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" />
 }
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
+    <ConvexProvider client={convex}>
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -57,6 +53,6 @@ export default function App() {
           </Route>
         </Routes>
       </BrowserRouter>
-    </QueryClientProvider>
+    </ConvexProvider>
   )
 }

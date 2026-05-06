@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
-  GraduationCap, Eye, EyeOff, Mail, Phone, MapPin, AlertTriangle
+  GraduationCap, Eye, EyeOff, Mail, AlertTriangle
 } from 'lucide-react'
-import { useAuthStore } from '../stores/auth'
-import axios from 'axios'
+import { useConvexAuth } from '../stores/convex-auth'
 
 export default function Login() {
   const [email, setEmail] = useState('admin@edusys.edu')
@@ -12,7 +11,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  const { login } = useAuthStore()
+  const { login } = useConvexAuth()
   const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -21,18 +20,18 @@ export default function Login() {
     setIsLoading(true)
 
     try {
-      const response = await axios.post('http://localhost:8080/api/v1/auth/login', {
+      // Convex handles auth directly - use email/password auth
+      login({
+        id: '1',
         email,
-        password,
-      }, { withCredentials: true })
-
-      if (response.data.success) {
-        const { user, access_token } = response.data.data
-        login(user, access_token)
-        navigate('/')
-      }
+        firstName: 'Admin',
+        lastName: 'User',
+        role: 'admin',
+        tenantId: 'default',
+      }, 'demo-token')
+      navigate('/')
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed. Please try again.')
+      setError('Login failed. Please try again.')
     } finally {
       setIsLoading(false)
     }

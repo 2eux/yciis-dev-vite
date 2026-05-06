@@ -1,65 +1,13 @@
 version: '3.8'
 
 services:
-  # =============================================
-  # EDUSYS PRO - Backend API
-  # =============================================
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: edusys-api
-    ports:
-      - "${SERVER_PORT:-8080}:8080"
-    environment:
-      - SERVER_PORT=8080
-      - NODE_ENV=${NODE_ENV:-production}
-      # Supabase - REQUIRED
-      - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
-      # JWT
-      - JWT_SECRET=${JWT_SECRET}
-      - JWT_EXPIRY_MINUTES=${JWT_EXPIRY_MINUTES:-15}
-      - REFRESH_TOKEN_EXPIRY_DAYS=${REFRESH_TOKEN_EXPIRY_DAYS:-30}
-      # Redis (optional)
-      - REDIS_URL=${REDIS_URL:-}
-    env_file:
-      - .env
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    networks:
-      - edusys-network
-
-  # =============================================
-  # EDUSYS PRO - Frontend WebApp
-  # =============================================
   web:
     build:
       context: ./web
       dockerfile: Dockerfile
+      args:
+        - VITE_CONVEX_URL=${VITE_CONVEX_URL}
     container_name: edusys-web
     ports:
-      - "${WEB_PORT:-3000}:3000"
-    environment:
-      - NODE_ENV=${NODE_ENV:-production}
-      - VITE_SUPABASE_URL=${SUPABASE_URL}
-      - VITE_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
-      - VITE_API_URL=http://api:8080
-    env_file:
-      - .env
+      - "${WEB_PORT:-3000}:80"
     restart: unless-stopped
-    depends_on:
-      - api
-    networks:
-      - edusys-network
-
-networks:
-  edusys-network:
-    driver: bridge
-
-volumes:
-  edusys-data:

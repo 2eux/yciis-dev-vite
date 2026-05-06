@@ -1,10 +1,9 @@
-import { useQuery } from '@tanstack/react-query'
 import { 
   Users, GraduationCap, Briefcase, CalendarClock, DollarSign, 
   TrendingUp, TrendingDown, AlertTriangle, MoreHorizontal,
   Calendar, Award, FileText, Wallet
 } from 'lucide-react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts'
+import { LineChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts'
 
 const mockData = {
   overview: {
@@ -101,32 +100,10 @@ function StatCard({ title, value, change, isPositive, icon: Icon, color }: StatC
 }
 
 export default function Dashboard() {
-  const { data, isLoading } = useQuery({
-    queryKey: ['dashboard'],
-    queryFn: async () => {
-      await new Promise(resolve => setTimeout(resolve, 300))
-      return mockData
-    },
-  })
+  const data = mockData
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount)
-  }
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="card p-5">
-              <div className="skeleton h-10 w-10 rounded-xl mb-4"></div>
-              <div className="skeleton h-8 w-24 mb-2"></div>
-              <div className="skeleton h-4 w-16"></div>
-            </div>
-          ))}
-        </div>
-      </div>
-    )
   }
 
   return (

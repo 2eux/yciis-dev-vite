@@ -4,10 +4,10 @@ WORKDIR /app
 ARG VITE_CONVEX_URL
 ENV VITE_CONVEX_URL=${VITE_CONVEX_URL}
 
-COPY package.json ./
+COPY web/package.json ./
 RUN npm install
 
-COPY . .
+COPY web/ ./
 RUN npm run build
 
 FROM nginx:alpine
@@ -15,12 +15,8 @@ FROM nginx:alpine
 RUN apk add --no-cache curl
 
 RUN rm /etc/nginx/conf.d/default.conf
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY web/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/dist /usr/share/nginx/html
-
-RUN chown -R nginx:nginx /usr/share/nginx/html && \
-    chown -R nginx:nginx /var/cache/nginx && \
-    chown -R nginx:nginx /var/log/nginx
 
 EXPOSE 80
 

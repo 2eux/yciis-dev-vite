@@ -1,6 +1,12 @@
+node_modules
 .git
 .env
-node_modules
 dist
-out
 *.log
+.vscode
+.idea
+internal
+cmd
+convex
+*.md
+*.exe

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/2eux/yciis-dev-vite/internal/config"
+	"github.com/edusyspro/edusys/internal/config"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 )

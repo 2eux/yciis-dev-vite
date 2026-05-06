@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation, NavLink } from 'react-router-dom'
 import { 
   GraduationCap, Users, BookOpen, CalendarClock, FileText, 
   Wallet, Briefcase, Truck, Library, Settings, LogOut, Bell, Search,
   Menu, Plus, ChevronDown, Home, BarChart3, X
 } from 'lucide-react'
-import { useAuthStore } from '../stores/auth'
+import { useConvexAuth } from '../stores/convex-auth'
 
 const navItems = [
   { path: '/', icon: Home, label: 'Dashboard' },
@@ -21,7 +21,7 @@ const navItems = [
 ]
 
 export default function Layout() {
-  const { user, logout } = useAuthStore()
+  const { user, logout } = useConvexAuth()
   const navigate = useNavigate()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
